@@ -67,16 +67,9 @@ Output ONLY raw JSON, no markdown, no preamble:
 `.trim();
 }
 
+// 1. buildImagePrompt — raw prompt only, no brand style injected
 function buildImagePrompt(userPrompt: string, brand: Required<BrandDNA>): string {
-  const styleHints = [
-    brand.tone,
-    `${brand.palette.slice(0, 2).join(' and ')} color palette`,
-    'professional commercial photography',
-    brand.logo_description ? `featuring ${brand.logo_description}` : '',
-    brand.guidelines,
-  ].filter(Boolean).join(', ');
-
-  return `${userPrompt}. Visual style: ${styleHints}`;
+  return userPrompt;
 }
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
