@@ -17,7 +17,7 @@ const DEFAULT_DNA: BrandDNA = {
   name: 'Ethereal Form',
   palette: ['#FFFDD0', '#1C1C1C'],
   typography: { heading: 'Oswald Bold', body: 'Geist Mono Regular' },
-  tone: 'luxury architectural minimalism editorial photography style',
+  tone: 'clean professional studio lighting, minimalist aesthetic',
   tags: ['#EtherealForm'],
 };
 
