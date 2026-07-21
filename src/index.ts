@@ -62,31 +62,31 @@ export default {
         }
       `.trim();
 
-      // --- EXECUTION: UPDATED ACTIVE 2026 AI MODELS ---
-      // Running image generation via standard flux-1-schnell model
+      // --- EXECUTION: CURRENT ACTIVE PRODUCTION AI MODELS ---
+      // 1. Image Generation via Flux-1-Schnell (1:1 Resolution)
       const imageTask = env.AI.run('@cf/blackforestlabs/flux-1-schnell', {
         prompt: `${userPrompt}, architectural minimalism luxury editorial style, color palette of cream white and muted moss, clean studio lighting, 8k resolution`,
         height: 1024,
         width: 1024
       });
 
-      // Running copy generation via updated llama-3.1 model
+      // 2. Text Generation via Llama-3.1-8b-instruct
       const copyTask = env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
         messages: [
           { role: "system", content: BRAND_SYSTEM_PROMPT },
           { role: "user", content: `Generate brand data for: ${userPrompt}` }
         ],
-        temperature: 0.1, 
+        temperature: 0.1, // Hard locks the rules
         max_tokens: 500
       });
 
       const [imageResult, textResult] = await Promise.all([imageTask, copyTask]);
 
-      // Transform raw binary data to Base64 URI string
+      // Transform raw binary image data to a usable web string
       const imageBuffer = await imageResult.arrayBuffer();
       const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
 
-      // Clean text output from markdown debris
+      // Clean text output from raw markdown debris if needed
       let cleanText = textResult.response.trim();
       if (cleanText.startsWith("```")) {
         cleanText = cleanText.replace(/```json|```/g, "").trim();
