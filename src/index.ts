@@ -16,7 +16,7 @@ export default {
     }
 
     if (request.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Send a JSON POST request." }), { status: 405, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: "Please send a JSON POST request." }), { status: 405, headers: corsHeaders });
     }
 
     try {
@@ -40,14 +40,13 @@ export default {
         }
       `.trim();
 
-      // --- LITERAL MODEL PATH STRINGS TO BYPASS DEPRECATION ---
-      const imageTask = env.AI.run('@cf/blackforestlabs/flux-1-schnell', {
+      const imageTask = env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
         prompt: `${userPrompt}, luxury architectural minimalism editorial photography style, color palette of cream white, clean studio lighting`,
         height: 1024,
         width: 1024
       });
 
-      const copyTask = env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      const copyTask = env.AI.run('@cf/meta/llama-3.1-8b-instruct-fp8', {
         messages: [
           { role: "system", content: BRAND_SYSTEM_PROMPT },
           { role: "user", content: `Generate brand data for: ${userPrompt}` }
@@ -58,7 +57,6 @@ export default {
 
       const [imageResult, textResult] = await Promise.all([imageTask, copyTask]);
 
-      // Array Buffer Conversion to Base64 String
       const imageBuffer = await imageResult.arrayBuffer();
       const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
 
