@@ -68,17 +68,16 @@ Output ONLY raw JSON, no markdown, no preamble:
 }
 
 function buildImagePrompt(userPrompt: string, brand: Required<BrandDNA>): string {
-  return [
-    userPrompt,
+  const styleHints = [
     brand.tone,
-    `color palette of ${brand.palette.slice(0, 2).join(' and ')}`,
-    'clean studio lighting',
-    'ultra high quality commercial photography',
+    `${brand.palette.slice(0, 2).join(' and ')} color palette`,
+    'professional commercial photography',
     brand.logo_description ? `featuring ${brand.logo_description}` : '',
     brand.guidelines,
   ].filter(Boolean).join(', ');
-}
 
+  return `${userPrompt}. Visual style: ${styleHints}`;
+}
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const corsHeaders = {
