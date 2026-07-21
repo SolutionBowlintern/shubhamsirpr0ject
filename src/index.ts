@@ -56,11 +56,7 @@ export default {
       });
 
       const [imageResult, textResult] = await Promise.all([imageTask, copyTask]);
-
-      const bytes = new Uint8Array(imageResult);
-let binary = '';
-for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-const base64String = btoa(binary);
+      const base64String = imageResult.image;
       let cleanText = textResult.response.trim();
       if (cleanText.startsWith("```")) {
         cleanText = cleanText.replace(/```json|```/g, "").trim();
@@ -81,7 +77,7 @@ const base64String = btoa(binary);
 
       return new Response(JSON.stringify({
         status: "SUCCESS",
-        image_url: `data:image/png;base64,${base64String}`,
+        image_url: `data:image/jpeg;base64,${base64String}`,
         brand_assets: parsedAssets
       }), { status: 200, headers: corsHeaders });
 
