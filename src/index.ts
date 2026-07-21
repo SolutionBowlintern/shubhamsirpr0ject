@@ -1,5 +1,9 @@
+export interface Env {
+  AI: any;
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request: Request, env: Env): Promise<Response> {
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -12,81 +16,52 @@ export default {
     }
 
     if (request.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Please send a JSON POST request." }), { 
-        status: 405, 
-        headers: corsHeaders 
-      });
+      return new Response(JSON.stringify({ error: "Send a JSON POST request." }), { status: 405, headers: corsHeaders });
     }
 
     try {
-      const body = await request.json();
+      const body: any = await request.json();
       const userPrompt = body.prompt;
 
       if (!userPrompt) {
-        return new Response(JSON.stringify({ error: "Missing 'prompt' in request body." }), { 
-          status: 400, 
-          headers: corsHeaders 
-        });
+        return new Response(JSON.stringify({ error: "Missing 'prompt' parameter." }), { status: 400, headers: corsHeaders });
       }
 
-      // --- GUARDRAIL 1: BANNED TERM FILTER ---
-      const sanitizedInput = userPrompt.toLowerCase();
-      const FORBIDDEN = ["cheap", "discount", "neon", "cyberpunk", "ugly"];
-      for (const token of FORBIDDEN) {
-        if (sanitizedInput.includes(token)) {
-          return new Response(JSON.stringify({
-            status: "BLOCKED",
-            reason: `The term '\${token}' violates brand identity parameters.`
-          }), { status: 400, headers: corsHeaders });
-        }
-      }
-
-      // --- GUARDRAIL 2: STRICT BRAND SYSTEM PROMPT ---
       const BRAND_SYSTEM_PROMPT = `
         You are the Design Director for 'Ethereal Form'. Convert product ideas into brand assets.
-        
-        [BRAND IDENTITY MANDATES]
-        - COLOR PALETTE: Cream White (#FFFDD0), Charcoal Gray (#1C1C1C), Muted Moss (#606E5C). No other colors.
-        - FONTS: Headers are 'Oswald Bold'. Paragraphs are 'Geist Mono Regular'.
-        - TONE: High-end architectural minimalism, quiet luxury.
-
-        Output ONLY a single raw JSON object. Do not use markdown blocks like \`\`\`json. Do not explain anything.
-        
-        Expected JSON Schema:
+        MANDATES: Color palette is Cream White (#FFFDD0), Charcoal Gray (#1C1C1C).
+        Output ONLY raw JSON matching this schema:
         {
           "typography": { "heading": "Oswald Bold", "body": "Geist Mono Regular" },
-          "palette": ["#FFFDD0", "#1C1C1C", "#606E5C"],
+          "palette": ["#FFFDD0", "#1C1C1C"],
           "headline": "A short minimalist title.",
-          "caption": "An elegant, descriptive caption matching the image.",
-          "tags": ["#EtherealForm", "#QuietLuxury"]
+          "caption": "An elegant description.",
+          "tags": ["#EtherealForm"]
         }
       `.trim();
 
-      // --- EXECUTION: CURRENT ACTIVE PRODUCTION AI MODELS ---
-      // 1. Image Generation via Flux-1-Schnell (1:1 Resolution)
+      // --- LITERAL MODEL PATH STRINGS TO BYPASS DEPRECATION ---
       const imageTask = env.AI.run('@cf/blackforestlabs/flux-1-schnell', {
-        prompt: `${userPrompt}, architectural minimalism luxury editorial style, color palette of cream white and muted moss, clean studio lighting, 8k resolution`,
+        prompt: `${userPrompt}, luxury architectural minimalism editorial photography style, color palette of cream white, clean studio lighting`,
         height: 1024,
         width: 1024
       });
 
-      // 2. Text Generation via Llama-3.1-8b-instruct
       const copyTask = env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
         messages: [
           { role: "system", content: BRAND_SYSTEM_PROMPT },
           { role: "user", content: `Generate brand data for: ${userPrompt}` }
         ],
-        temperature: 0.1, // Hard locks the rules
-        max_tokens: 500
+        temperature: 0.1,
+        max_tokens: 400
       });
 
       const [imageResult, textResult] = await Promise.all([imageTask, copyTask]);
 
-      // Transform raw binary image data to a usable web string
+      // Array Buffer Conversion to Base64 String
       const imageBuffer = await imageResult.arrayBuffer();
       const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
 
-      // Clean text output from raw markdown debris if needed
       let cleanText = textResult.response.trim();
       if (cleanText.startsWith("```")) {
         cleanText = cleanText.replace(/```json|```/g, "").trim();
@@ -98,10 +73,10 @@ export default {
       } catch (e) {
         parsedAssets = {
           typography: { "heading": "Oswald Bold", "body": "Geist Mono Regular" },
-          palette: ["#FFFDD0", "#1C1C1C", "#606E5C"],
+          palette: ["#FFFDD0", "#1C1C1C"],
           headline: "The Art of Space",
-          caption: "A deep study in visual calmness, material heritage, and structure.",
-          tags: ["#EtherealForm", "#Minimalism"]
+          caption: "A deep study in visual calmness and material structure.",
+          tags: ["#EtherealForm"]
         };
       }
 
@@ -111,11 +86,8 @@ export default {
         brand_assets: parsedAssets
       }), { status: 200, headers: corsHeaders });
 
-    } catch (err) {
-      return new Response(JSON.stringify({ error: err.message }), { 
-        status: 500, 
-        headers: corsHeaders 
-      });
+    } catch (err: any) {
+      return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
     }
   }
 };
