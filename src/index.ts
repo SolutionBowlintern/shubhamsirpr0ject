@@ -57,9 +57,10 @@ export default {
 
       const [imageResult, textResult] = await Promise.all([imageTask, copyTask]);
 
-      const imageBuffer = await imageResult.arrayBuffer();
-      const base64String = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-
+      const bytes = new Uint8Array(imageResult);
+let binary = '';
+for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+const base64String = btoa(binary);
       let cleanText = textResult.response.trim();
       if (cleanText.startsWith("```")) {
         cleanText = cleanText.replace(/```json|```/g, "").trim();
