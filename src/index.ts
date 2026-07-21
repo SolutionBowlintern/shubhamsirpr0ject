@@ -81,7 +81,7 @@ const base64String = btoa(binary);
 
       return new Response(JSON.stringify({
         status: "SUCCESS",
-        image_url: `data:image/jpeg;base64,${base64String}`,
+        image_url: `data:image/png;base64,${base64String}`,
         brand_assets: parsedAssets
       }), { status: 200, headers: corsHeaders });
 
