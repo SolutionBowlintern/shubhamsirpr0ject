@@ -1,6 +1,5 @@
 export default {
   async fetch(request, env) {
-    // 1. CORS Setup so your web apps can securely call this API
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -51,7 +50,7 @@ export default {
         - FONTS: Headers are 'Oswald Bold'. Paragraphs are 'Geist Mono Regular'.
         - TONE: High-end architectural minimalism, quiet luxury.
 
-        Output ONLY a single raw JSON object. Do not use markdown blocks like \`\`\`json.
+        Output ONLY a single raw JSON object. Do not use markdown blocks like \`\`\`json. Do not explain anything.
         
         Expected JSON Schema:
         {
@@ -63,21 +62,21 @@ export default {
         }
       `.trim();
 
-      // --- EXECUTION: DUAL MODEL CALLS ---
-      // A. Generate Image via stable diffusion using template-provided binding context
-      const imageTask = env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
+      // --- EXECUTION: UPDATED ACTIVE 2026 AI MODELS ---
+      // Running image generation via standard flux-1-schnell model
+      const imageTask = env.AI.run('@cf/blackforestlabs/flux-1-schnell', {
         prompt: `${userPrompt}, architectural minimalism luxury editorial style, color palette of cream white and muted moss, clean studio lighting, 8k resolution`,
         height: 1024,
         width: 1024
       });
 
-      // B. Generate Text Copy via text generation model
+      // Running copy generation via updated llama-3.1 model
       const copyTask = env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
         messages: [
           { role: "system", content: BRAND_SYSTEM_PROMPT },
           { role: "user", content: `Generate brand data for: ${userPrompt}` }
         ],
-        temperature: 0.1, // Forces strict adherence to the system prompt
+        temperature: 0.1, 
         max_tokens: 500
       });
 
@@ -97,7 +96,6 @@ export default {
       try {
         parsedAssets = JSON.parse(cleanText);
       } catch (e) {
-        // Fallback standard if the json layout breaks
         parsedAssets = {
           typography: { "heading": "Oswald Bold", "body": "Geist Mono Regular" },
           palette: ["#FFFDD0", "#1C1C1C", "#606E5C"],
